@@ -168,9 +168,12 @@ export default function App() {
     window.setTimeout(() => {
       const moves = position.moves({ verbose: true });
       if (!moves.length) { setThinking(false); return; }
-      const captures = moves.filter(m => m.captured);
-      const checks = moves.filter(m => m.san.includes('+') || m.san.includes('#'));
-      const pool = checks.length ? checks : captures.length ? captures : moves;
+      const trappedSquares = new Set(activeEffects.filter(e => e.kind === 'trap' && e.color === 'b').map(e => e.target));
+      const untrappedMoves = moves.filter(m => !trappedSquares.has(m.from as Square));
+      const availableMoves = untrappedMoves.length ? untrappedMoves : moves;
+      const captures = availableMoves.filter(m => m.captured);
+      const checks = availableMoves.filter(m => m.san.includes('+') || m.san.includes('#'));
+      const pool = checks.length ? checks : captures.length ? captures : availableMoves;
       const move = pool[Math.floor(Math.random() * pool.length)];
       const before = position.fen();
       try {
@@ -276,7 +279,17 @@ export default function App() {
 
   const useCard = (card: DoorCard) => {
     if (thinking || currentTurn !== 'w' || gameOver) return;
-    if (chosenCard?.id === card.id) { setChosenCard(null); return; }
+    if (chosenCard?.id === card.id) {
+      if (card.kind === 'spark') {
+        setExtraDraw(true);
+        setHand(old => old.filter(c => c.id !== card.id));
+        setChosenCard(null);
+        addLog('⚡ Искра вдохновения: следующая дверь даст дополнительную карту.');
+      } else {
+        setChosenCard(null);
+      }
+      return;
+    }
     setChosenCard(card);
     addLog(`Выбрана карта «${card.name}». ${card.kind === 'spark' ? 'Нажми на карту ещё раз или на доску, чтобы применить.' : 'Теперь выбери цель на доске.'}`);
   };
