@@ -66,9 +66,13 @@ function rawMove(chess: Chess, from: Square, to: Square, color: Color): boolean 
   parts[4] = '0';
   if (color === 'b') parts[5] = String(Number(parts[5] || '1') + 1);
   try {
-    chess.load(parts.join(' '));
-    if (chess.isCheck()) return false;
-    return true;
+    const resultingFen = parts.join(' ');
+    const selfCheckParts = [...parts];
+    selfCheckParts[1] = color;
+    chess.load(selfCheckParts.join(' '));
+    const leavesKingInCheck = chess.isCheck();
+    chess.load(resultingFen);
+    return !leavesKingInCheck;
   } catch {
     return false;
   }
@@ -102,7 +106,8 @@ function customMove(chess: Chess, from: Square, to: Square, kind: CardKind, colo
     return rawMove(chess, from, to, color);
   }
   if (kind === 'transmute') {
-    if (piece.type !== 'n' || chess.get(to)) return false;
+    const target = chess.get(to);
+    if (piece.type !== 'n' || target?.color === color || target?.type === 'k') return false;
     if (!(dx === 0 || dy === 0 || dx === dy) || !lineIsClear(chess, from, to)) return false;
     return rawMove(chess, from, to, color);
   }
@@ -191,7 +196,7 @@ export default function App() {
     addLog(`♟️ Ты: ${from} → ${to}${label ? ` · ${label}` : ''}.`);
     drawAfterMove('w');
     setTurnCount(c => c + 1);
-    setActiveEffects(old => old.filter(e => !(e.color === 'w' && e.turns <= 1)));
+    setActiveEffects(old => old.filter(e => !(e.color === 'w' && e.target === from && (e.kind === 'dash' || e.kind === 'transmute'))));
     if (!next.isGameOver()) runComputer(new Chess(next.fen()));
   };
 
