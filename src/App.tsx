@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Chess, type Square, type PieceSymbol, type Color } from 'chess.js';
-import { RotateCcw, Undo2, Volume2, VolumeX, Sparkles, Bot, UserRound } from 'lucide-react';
+import { RotateCcw, Undo2, Sparkles, Bot, UserRound } from 'lucide-react';
 
 type Level = { rating: string; name: string; depth: number; randomness: number };
 const levels: Level[] = [
@@ -94,7 +94,6 @@ export default function App() {
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [thinking, setThinking] = useState(false);
   const [levelIndex, setLevelIndex] = useState(1);
-  const [history, setHistory] = useState<string[]>([]);
   const [flipped, setFlipped] = useState(false);
   const level = levels[levelIndex];
   const board = game.board();
@@ -120,7 +119,7 @@ export default function App() {
         setGame(new Chess(next.fen()));
         setLastMove({ from: move.from, to: move.to });
         setSelected(null);
-        setHistory(items => [...items, move.san]);
+       
       }
       setThinking(false);
     }, 420);
@@ -128,7 +127,7 @@ export default function App() {
   }, [game, level]);
 
   const resetGame = () => {
-    setGame(new Chess()); setSelected(null); setLastMove(null); setThinking(false); setHistory([]);
+    setGame(new Chess()); setSelected(null); setLastMove(null); setThinking(false);
   };
   const clickSquare = (square: Square) => {
     if (thinking || game.turn() !== 'w' || game.isGameOver()) return;
@@ -137,7 +136,7 @@ export default function App() {
       const next = new Chess(game.fen());
       const move = next.move({ from: selected, to: square, promotion: 'q' });
       if (move) {
-        setGame(next); setLastMove({ from: move.from, to: move.to }); setHistory(items => [...items, move.san]); setSelected(null);
+        setGame(next); setLastMove({ from: move.from, to: move.to }); setSelected(null);
       }
       return;
     }
@@ -147,7 +146,7 @@ export default function App() {
     if (thinking || game.history().length < 2) return;
     const next = new Chess(game.fen());
     next.undo(); next.undo();
-    setGame(next); setSelected(null); setLastMove(null); setHistory(items => items.slice(0, -2));
+    setGame(next); setSelected(null); setLastMove(null);
   };
 
   return (
