@@ -187,6 +187,11 @@ export default function App() {
                     if (!piece || piece.color !== 'w' || game.turn() !== 'w' || thinking) { event.preventDefault(); return; }
                     event.dataTransfer.setData('text/plain', square);
                     event.dataTransfer.effectAllowed = 'move';
+                    const pieceElement = event.currentTarget.querySelector('.piece-art, .piece-fallback') as HTMLElement | null;
+                    if (pieceElement) {
+                      const rect = pieceElement.getBoundingClientRect();
+                      event.dataTransfer.setDragImage(pieceElement, rect.width / 2, rect.height / 2);
+                    }
                     setDraggingFrom(square);
                     setSelected(square);
                   }}
