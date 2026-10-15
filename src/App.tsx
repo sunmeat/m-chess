@@ -122,7 +122,6 @@ export default function App() {
       const move = next.move({ from, to, promotion: 'q' });
       if (move) {
         setGame(next);
-        setLastMove({ from: move.from, to: move.to });
         setSelected(null);
         setDraggingFrom(null);
       }
@@ -165,7 +164,7 @@ export default function App() {
                   data-square={square}
                   draggable={Boolean(piece?.color === playerColor && game.turn() === playerColor && !thinking)}
                   onDragStart={event => {
-                    if (!piece || piece.color !== 'w' || game.turn() !== playerColor || thinking) { event.preventDefault(); return; }
+                    if (!piece || piece.color !== playerColor || game.turn() !== playerColor || thinking) { event.preventDefault(); return; }
                     event.dataTransfer.setData('text/plain', square);
                     event.dataTransfer.effectAllowed = 'move';
                     const pieceElement = event.currentTarget.querySelector('.piece-art, .piece-fallback') as HTMLElement | null;
