@@ -91,6 +91,7 @@ export default function App() {
   const [selected, setSelected] = useState<Square | null>(null);
   const [draggingFrom, setDraggingFrom] = useState<Square | null>(null);
   const suppressClick = useRef(false);
+  const pointerDragOrigin = useRef<Square | null>(null);
   const [thinking, setThinking] = useState(false);
   const styleId = 's01';
   const targets = useMemo(() => selected ? game.moves({ square: selected, verbose: true }).map(move => move.to as Square) : [], [game, selected]);
@@ -162,38 +163,29 @@ export default function App() {
                 const isKingInCheck = piece?.type === 'k' && piece.color === game.turn() && game.isCheck();
                 return <button key={square} role="gridcell" aria-label={`${square}${piece ? `, ${piece.color === 'w' ? 'белая' : 'чёрная'} фигура` : ''}`} className={`square ${isLight ? 'light' : 'dark'} ${selected === square ? 'selected' : ''} ${draggingFrom === square ? 'dragging' : ''} ${targets.includes(square) ? (piece ? 'capture-target' : 'legal-target') : ''} ${isKingInCheck ? 'king-check' : ''}`}
                   data-square={square}
-                  draggable={Boolean(piece?.color === playerColor && game.turn() === playerColor && !thinking)}
-                  onDragStart={event => {
-                    if (!piece || piece.color !== playerColor || game.turn() !== playerColor || thinking) { event.preventDefault(); return; }
-                    event.dataTransfer.setData('text/plain', square);
-                    event.dataTransfer.effectAllowed = 'move';
+                  onPointerDown={event => {
+                    if (!piece || piece.color !== playerColor || game.turn() !== playerColor || thinking) return;
+                    pointerDragOrigin.current = square;
                     setDraggingFrom(square);
                     setSelected(square);
-                  }}
-                  onDragOver={event => event.preventDefault()}
-                  onDrop={event => {
-                    event.preventDefault();
-                    const from = (event.dataTransfer.getData('text/plain') || draggingFrom) as Square | null;
-                    if (from) makeMove(from, square);
-                  }}
-                  onDragEnd={() => setDraggingFrom(null)}
-                  onPointerDown={event => {
-                    if (event.pointerType === 'touch' && piece?.color === playerColor && game.turn() === playerColor && !thinking) {
-                      event.preventDefault();
-                      setDraggingFrom(square);
-                      setSelected(square);
-                    }
+                    if (event.pointerType === 'touch') event.preventDefault();
                   }}
                   onPointerUp={event => {
-                    if (event.pointerType === 'touch' && draggingFrom) {
-                      event.preventDefault();
-                      const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-square]') as HTMLElement | null;
-                      const destination = (target?.dataset.square || square) as Square;
+                    const origin = pointerDragOrigin.current;
+                    if (!origin) return;
+                    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-square]') as HTMLElement | null;
+                    const destination = (target?.dataset.square || square) as Square;
+                    pointerDragOrigin.current = null;
+                    setDraggingFrom(null);
+                    if (destination !== origin) {
                       suppressClick.current = true;
                       window.setTimeout(() => { suppressClick.current = false; }, 350);
-                      if (destination !== draggingFrom) makeMove(draggingFrom, destination);
-                      setDraggingFrom(null);
+                      makeMove(origin, destination);
                     }
+                  }}
+                  onPointerCancel={() => {
+                    pointerDragOrigin.current = null;
+                    setDraggingFrom(null);
                   }}
                   onClick={() => clickSquare(square)}>
                   {piece && <PieceArt type={piece.type} color={piece.color} styleId={styleId} />}
