@@ -48,7 +48,7 @@ body{background:radial-gradient(ellipse at 50% 0%,#292b30 0,transparent 55%),#1c
 .square:has(.piece-art.piece-white),.square:has(.piece-fallback.piece-white){cursor:grab}
 .square:has(.piece-art.piece-white):active,.square:has(.piece-fallback.piece-white):active{cursor:grabbing}
 .square:hover{filter:none}
-.piece-art.piece-black{filter:brightness(.48) saturate(.35) contrast(1.22) drop-shadow(0 2px 0 #0007) drop-shadow(0 4px 2px #0004)}
+.piece-art.piece-black{filter:brightness(.34) saturate(.18) contrast(1.35) drop-shadow(0 2px 0 #0007) drop-shadow(0 4px 2px #0004)}
 .square.dragging .piece-art.piece-black{filter:brightness(.48) saturate(.35) contrast(1.22) drop-shadow(0 8px 5px #0009)}
 @media(max-width:520px){
   .play-area{width:85%;max-width:595px;margin-top:13px}
