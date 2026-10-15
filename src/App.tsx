@@ -1,22 +1,30 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Chess, type Square, type PieceSymbol, type Color } from 'chess.js';
-import { RotateCcw, Undo2, Bot, UserRound } from 'lucide-react';
+import { RotateCcw, Undo2 } from 'lucide-react';
 
 type Level = { rating: string; name: string; depth: number; randomness: number };
-const levels: Level[] = [
-  { rating: '500', name: 'Новичок', depth: 1, randomness: 0.7 },
-  { rating: '1000', name: 'Любитель', depth: 2, randomness: 0.42 },
-  { rating: '1500', name: 'Клубный', depth: 2, randomness: 0.12 },
-  { rating: '2000', name: 'Эксперт', depth: 3, randomness: 0.04 },
-  { rating: '2500+', name: 'Гроссмейстер', depth: 3, randomness: 0 },
-];
+const level: Level = { rating: '1000', name: 'Любитель', depth: 2, randomness: 0.42 };
 const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const ranks = [8, 7, 6, 5, 4, 3, 2, 1];
-const glyphs: Record<Color, Record<PieceSymbol, string>> = {
-  w: { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' },
-  b: { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' },
-};
 const values: Record<PieceSymbol, number> = { p: 100, n: 320, b: 335, r: 500, q: 900, k: 20000 };
+
+function PieceArt({ type, color }: { type: PieceSymbol; color: Color }) {
+  const white = color === 'w';
+  const fill = white ? 'url(#porcelain)' : 'url(#forest)';
+  const stroke = white ? '#a69d87' : '#17251a';
+  const shine = white ? '#ffffff' : '#8cb17a';
+  const common = { fill, stroke, strokeWidth: 1.6, strokeLinejoin: 'round' as const };
+  return <svg className={`piece-art ${white ? 'piece-white' : 'piece-black'}`} viewBox="0 0 64 76" aria-hidden="true" focusable="false">
+    <defs><linearGradient id="porcelain" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#fffef8"/><stop offset=".55" stopColor="#f3e9d0"/><stop offset="1" stopColor="#c8b997"/></linearGradient><linearGradient id="forest" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#6c8d5a"/><stop offset=".48" stopColor="#345638"/><stop offset="1" stopColor="#1b3423"/></linearGradient></defs>
+    <ellipse cx="32" cy="69" rx="20" ry="4" fill="#17251a" opacity=".17"/>
+    {type === 'p' && <g {...common}><path d="M17 62h30l-3-8H20z"/><path d="M21 54c2-5 4-8 5-13h12c1 5 3 8 5 13z"/><circle cx="32" cy="25" r="12"/><path d="M25 19c2-4 6-5 10-4" fill="none" stroke={shine} strokeWidth="3" strokeLinecap="round"/></g>}
+    {type === 'r' && <g {...common}><path d="M16 62h32l-3-8H19z"/><path d="M21 54V28h22v26z"/><path d="M17 28V14h8v7h6v-7h8v7h7v-7h4v14z"/><path d="M24 35v13m8-13v13m8-13v13" fill="none" stroke={shine} strokeWidth="2" strokeLinecap="round"/></g>}
+    {type === 'n' && <g {...common}><path d="M15 62h34l-4-8H19z"/><path d="M20 54c3-9 2-15-2-22l8-17 18 6 5 16-8 17z"/><path d="M26 20l8-6 11 8-9 4z"/><path d="M25 28l8 2-4 5-7-2z" fill={shine} stroke="none"/><circle cx="38" cy="25" r="2.5" fill={white ? '#5b714c' : '#f7d96d'} stroke="none"/><path d="M29 43l12 4" fill="none" stroke={shine} strokeWidth="2.5" strokeLinecap="round"/></g>}
+    {type === 'b' && <g {...common}><path d="M16 62h32l-3-8H19z"/><path d="M22 54c4-7 3-12-2-18L32 14l12 22c-5 6-6 11-2 18z"/><path d="M32 17l-4 10 7 8-5 8" fill="none" stroke={shine} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/><circle cx="32" cy="13" r="4"/></g>}
+    {type === 'q' && <g {...common}><path d="M14 62h36l-4-8H18z"/><path d="M20 54l4-20h16l4 20z"/><path d="M24 35l-8-12 10 4 6-16 6 16 10-4-8 12z"/><circle cx="16" cy="21" r="4"/><circle cx="26" cy="25" r="4"/><circle cx="32" cy="9" r="4"/><circle cx="38" cy="25" r="4"/><circle cx="48" cy="21" r="4"/><path d="M26 43h12" stroke={shine} strokeWidth="2.5" strokeLinecap="round"/></g>}
+    {type === 'k' && <g {...common}><path d="M14 62h36l-4-8H18z"/><path d="M21 54l4-20h14l4 20z"/><path d="M28 34V24h-8v-6h8V9h8v9h8v6h-8v10z"/><path d="M32 12v16" fill="none" stroke={shine} strokeWidth="2" strokeLinecap="round"/><path d="M26 42h12" stroke={shine} strokeWidth="2.5" strokeLinecap="round"/></g>}
+  </svg>;
+}
 
 function evaluate(chess: Chess) {
   if (chess.isCheckmate()) return -100000;
@@ -95,20 +103,9 @@ export default function App() {
   const suppressClick = useRef(false);
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [thinking, setThinking] = useState(false);
-  const [levelIndex, setLevelIndex] = useState(1);
   const [flipped, setFlipped] = useState(false);
-  const level = levels[levelIndex];
-  const board = game.board();
   const targets = useMemo(() => selected ? game.moves({ square: selected, verbose: true }).map(move => move.to as Square) : [], [game, selected]);
   const status = statusText(game, thinking);
-  const moveNumber = Math.max(1, Math.ceil(game.history().length / 2));
-  const material = useMemo(() => {
-    let white = 0, black = 0;
-    for (const row of board) for (const piece of row) if (piece) {
-      if (piece.color === 'w') white += values[piece.type]; else black += values[piece.type];
-    }
-    return { white, black };
-  }, [board]);
 
   useEffect(() => {
     if (game.turn() !== 'b' || game.isGameOver()) return;
@@ -170,20 +167,15 @@ export default function App() {
 
   return (
     <main className="chess-app">
-      <header className="topbar">
-        <a className="brand" href="#" onClick={event => event.preventDefault()} aria-label="M-Chess главная">
-          <span className="brand-icon">♞</span><span className="brand-name">m<span>·</span>chess</span>
-        </a>
-        <div className="topbar-right"><span className="offline-label"><i /> ИГРА БЕЗ СЕТИ</span><button className="round-button" onClick={() => setFlipped(value => !value)} title="Перевернуть доску" aria-label="Перевернуть доску"><RotateCcw size={17} /></button></div>
-      </header>
+      <header className="topbar"><a className="brand" href="#" onClick={event => event.preventDefault()} aria-label="Munchess"><span className="brand-icon">♞</span><span className="brand-name">m<span>·</span>chess</span></a><div className="topbar-right"><span className="rating-pill">1000 ELO</span><button className="round-button" onClick={() => setFlipped(value => !value)} title="Перевернуть доску" aria-label="Перевернуть доску"><RotateCcw size={18} /></button></div></header>
 
       <section className="play-area">
         <div className="board-side">
-          <div className="game-heading"><div className="game-state"><span className={game.isCheck() ? 'state-dot warning' : 'state-dot'} /> <span>{status}</span></div><span className="move-counter">ХОД {String(moveNumber).padStart(2, '0')}</span></div>
+          <div className="game-heading"><span className="move-counter">ПАРТИЯ ПРОТИВ КОМПЬЮТЕРА</span></div>
           <div className="board-wrap">
-            <div className="coordinates coordinates-left">{(flipped ? [...ranks].reverse() : ranks).map(rank => <span key={rank}>{rank}</span>)}</div>
+            
             <div className="chessboard" role="grid" aria-label="Шахматная доска">
-              {(flipped ? [...ranks].reverse() : ranks).map((rank, rowIndex) => (flipped ? [...files].reverse() : files).map((file, colIndex) => {
+              {(flipped ? [...ranks].reverse() : ranks).map(rank => (flipped ? [...files].reverse() : files).map(file => {
                 const square = `${file}${rank}` as Square;
                 const piece = game.get(square);
                 const isLight = (files.indexOf(file) + rank) % 2 !== 0;
@@ -226,28 +218,16 @@ export default function App() {
                   }}
                   onClick={() => clickSquare(square)}>
                   {targets.includes(square) && !piece && <span className="target-dot" />}
-                  {piece && <span className={`piece ${piece.color === 'w' ? 'white-piece' : 'black-piece'}`}>{glyphs[piece.color][piece.type]}</span>}
-                  {colIndex === 0 && <span className="rank-label">{rank}</span>}
-                  {rowIndex === 7 && <span className="file-label">{file}</span>}
+                  {piece && <PieceArt type={piece.type} color={piece.color} />}
                 </button>;
               }))}
             </div>
-            <div className="coordinates coordinates-right">{(flipped ? [...ranks].reverse() : ranks).map(rank => <span key={rank}>{rank}</span>)}</div>
+            
           </div>
-          <div className="board-bottom"><span><i className="legend-circle" /> Возможный ход</span><span><i className="legend-square" /> Последний ход</span><span className="material-score">Материал <b>{material.white - material.black > 0 ? '+' : ''}{((material.white - material.black) / 100).toFixed(1)}</b></span></div>
+          
         </div>
 
-        <aside className="control-side">
-          <section className="level-card">
-            <div className="side-label">ВЫБЕРИ СОПЕРНИКА</div><h2>Уровень игры</h2><p>От первой партии до серьёзного вызова.</p>
-            <div className="level-list">{levels.map((item, index) => <button key={item.rating} className={levelIndex === index ? 'level-option active' : 'level-option'} onClick={() => setLevelIndex(index)}><span className="level-rating">{item.rating}<small> ELO</small></span><span className="level-name">{item.name}</span><span className="level-radio">{levelIndex === index && <i />}</span></button>)}</div>
-            <div className="level-note"><span className="level-spark">✦</span><span><b>{level.rating} · {level.name}</b><small>Сложность можно менять в любой момент.</small></span></div>
-          </section>
-          <section className="moves-card"><div className="moves-head"><h3>Партия</h3><span>{Math.floor(game.history().length / 2) + (game.history().length % 2 ? 1 : 0)} ходов</span></div>
-            {game.history().length === 0 ? <div className="empty-moves"><span>♙</span><p>Твоя история начинается<br />с первого хода.</p></div> : <div className="moves-list">{Array.from({ length: Math.ceil(game.history().length / 2) }, (_, index) => <div className="move-row" key={index}><span>{index + 1}.</span><b>{game.history()[index * 2] ?? '…'}</b><b>{game.history()[index * 2 + 1] ?? '…'}</b></div>)}</div>}
-            <div className="move-actions"><button onClick={undoMove} disabled={thinking || game.history().length < 2}><Undo2 size={15} /> Отменить ход</button><button onClick={resetGame}><RotateCcw size={15} /> Новая партия</button></div>
-          </section>
-        </aside>
+        <div className="board-controls"><div className="game-state"><span className={game.isCheck() ? 'state-dot warning' : 'state-dot'} /> <span>{status}</span></div><div className="board-actions"><button onClick={undoMove} disabled={thinking || game.history().length < 2} aria-label="Отменить ход" title="Отменить ход"><Undo2 size={19} /></button><button onClick={resetGame} aria-label="Новая партия" title="Новая партия"><RotateCcw size={19} /></button></div></div>
       </section>
     </main>
   );
