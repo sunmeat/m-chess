@@ -69,3 +69,13 @@ body{background:radial-gradient(ellipse at 50% 0%,#292b30 0,transparent 55%),#1c
 .new-game-button:hover{transform:translateY(-2px);background:#65b965}
 .new-game-button:active{transform:translateY(1px);box-shadow:0 2px 0 #326c3d}
 .square.last-move.light,.square.last-move.dark{background:inherit}
+
+
+/* Duolingo-style move hints and near-black opponent pieces */
+.square.selected{background:inherit!important;box-shadow:none!important}
+.target-dot{width:25%;height:25%;background:#a8d69a9c;box-shadow:0 0 0 1px #172b1b20;pointer-events:none}
+.square.capture-target{background:#b6dc9b!important;box-shadow:inset 0 0 0 4px #b6dc9b!important}
+.square.capture-target:after{content:none!important;display:none!important}
+.piece-art.piece-black{filter:brightness(.12) grayscale(1) contrast(1.55) drop-shadow(0 2px 0 #0009) drop-shadow(0 4px 2px #0006)!important}
+.square.dragging .piece-art.piece-black{filter:brightness(.12) grayscale(1) contrast(1.55) drop-shadow(0 8px 5px #000b)!important}
+.piece-fallback.piece-black{color:#050506!important;-webkit-text-stroke:1px #000!important;text-shadow:0 1px 0 #18191b!important}
