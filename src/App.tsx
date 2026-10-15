@@ -166,7 +166,7 @@ export default function App() {
 
   return (
     <main className="chess-app">
-      <header className="topbar"><a className="brand" href="#" onClick={event => event.preventDefault()} aria-label="Munchess"><span className="brand-icon">♞</span><span className="brand-name">m<span>·</span>chess</span></a><div className="topbar-right"><span className="rating-pill">1000 ELO</span><button className="round-button" onClick={() => setFlipped(value => !value)} title="Перевернуть доску" aria-label="Перевернуть доску"><RotateCcw size={18} /></button></div></header>
+      <header className="topbar"><a className="brand" href="#" onClick={event => event.preventDefault()} aria-label="Munchess"><span className="brand-icon">♞</span><span className="brand-name">munchess</span></a><div className="topbar-right"><span className="rating-pill">1000 ELO</span><button className="round-button" onClick={() => setFlipped(value => !value)} title="Перевернуть доску" aria-label="Перевернуть доску"><RotateCcw size={18} /></button></div></header>
 
 
       <section className="play-area">
@@ -216,7 +216,6 @@ export default function App() {
                     }
                   }}
                   onClick={() => clickSquare(square)}>
-                  {targets.includes(square) && !piece && <span className="target-dot" />}
                   {piece && <PieceArt type={piece.type} color={piece.color} styleId={styleId} />}
                 </button>;
               }))}
