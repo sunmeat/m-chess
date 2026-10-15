@@ -45,8 +45,8 @@ body{background:radial-gradient(ellipse at 50% 0%,#292b30 0,transparent 55%),#1c
 .chessboard{border-radius:17px;box-shadow:inset 0 0 0 1px #ffffff08}
 .square{cursor:default}
 .square:active{cursor:default}
-.square:has(.piece-art),.square:has(.piece-fallback){cursor:grab}
-.square:has(.piece-art):active,.square:has(.piece-fallback):active{cursor:grabbing}
+.square:has(.piece-art.piece-white),.square:has(.piece-fallback.piece-white){cursor:grab}
+.square:has(.piece-art.piece-white):active,.square:has(.piece-fallback.piece-white):active{cursor:grabbing}
 .square:hover{filter:none}
 .piece-art.piece-black{filter:brightness(.48) saturate(.35) contrast(1.22) drop-shadow(0 2px 0 #0007) drop-shadow(0 4px 2px #0004)}
 .square.dragging .piece-art.piece-black{filter:brightness(.48) saturate(.35) contrast(1.22) drop-shadow(0 8px 5px #0009)}
@@ -58,5 +58,5 @@ body{background:radial-gradient(ellipse at 50% 0%,#292b30 0,transparent 55%),#1c
 
 
 /* Final board sizing and native piece-only drag preview */
-.play-area{max-width:565px}
-@media(max-width:520px){.play-area{width:80%;max-width:565px}}
+.play-area{max-width:537px}
+@media(max-width:520px){.play-area{width:76%;max-width:537px}}
