@@ -190,6 +190,7 @@ export default function App() {
                 const isLast = lastMove?.from === square || lastMove?.to === square;
                 const isKingInCheck = piece?.type === 'k' && piece.color === game.turn() && game.isCheck();
                 return <button key={square} role="gridcell" aria-label={`${square}${piece ? `, ${piece.color === 'w' ? 'белая' : 'чёрная'} фигура` : ''}`} className={`square ${isLight ? 'light' : 'dark'} ${selected === square ? 'selected' : ''} ${draggingFrom === square ? 'dragging' : ''} ${isLast ? 'last-move' : ''} ${targets.includes(square) ? (piece ? 'capture-target' : 'legal-target') : ''} ${isKingInCheck ? 'king-check' : ''}`}
+                  data-square={square}
                   draggable={Boolean(piece?.color === 'w' && game.turn() === 'w' && !thinking)}
                   onDragStart={event => {
                     if (!piece || piece.color !== 'w' || game.turn() !== 'w' || thinking) { event.preventDefault(); return; }
@@ -215,9 +216,11 @@ export default function App() {
                   onPointerUp={event => {
                     if (event.pointerType === 'touch' && draggingFrom) {
                       event.preventDefault();
+                      const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-square]') as HTMLElement | null;
+                      const destination = (target?.dataset.square || square) as Square;
                       suppressClick.current = true;
                       window.setTimeout(() => { suppressClick.current = false; }, 350);
-                      makeMove(draggingFrom, square);
+                      if (destination !== draggingFrom) makeMove(draggingFrom, destination);
                       setDraggingFrom(null);
                     }
                   }}
