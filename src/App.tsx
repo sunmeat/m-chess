@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Chess, type Square, type PieceSymbol, type Color } from 'chess.js';
-import { RotateCcw, Undo2 } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 
 type Level = { rating: string; name: string; depth: number; randomness: number };
 const level: Level = { rating: '1200', name: 'Любитель', depth: 3, randomness: 0.32 };
@@ -85,29 +85,18 @@ function chooseComputerMove(chess: Chess, level: Level) {
   return shortlist[Math.floor(Math.random() * shortlist.length)].move;
 }
 
-function statusText(game: Chess, thinking: boolean) {
-  if (thinking) return 'Компьютер думает…';
-  if (game.isCheckmate()) return game.turn() === 'w' ? 'Мат. Победил компьютер.' : 'Мат! Ты победил!';
-  if (game.isStalemate()) return 'Пат. Ничья.';
-  if (game.isDraw()) return 'Ничья.';
-  if (game.isCheck()) return game.turn() === 'w' ? 'Шах! Твой ход.' : 'Шах королю компьютера.';
-  return game.turn() === 'w' ? 'Твой ход' : 'Ход компьютера';
-}
-
 export default function App() {
   const [game, setGame] = useState(() => new Chess());
+  const [playerColor, setPlayerColor] = useState<Color>(() => Math.random() < 0.5 ? 'w' : 'b');
   const [selected, setSelected] = useState<Square | null>(null);
   const [draggingFrom, setDraggingFrom] = useState<Square | null>(null);
   const suppressClick = useRef(false);
-  const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [thinking, setThinking] = useState(false);
-  const [flipped, setFlipped] = useState(false);
   const styleId = 's01';
   const targets = useMemo(() => selected ? game.moves({ square: selected, verbose: true }).map(move => move.to as Square) : [], [game, selected]);
-  const status = statusText(game, thinking);
 
   useEffect(() => {
-    if (game.turn() !== 'b' || game.isGameOver()) return;
+    if (game.turn() === playerColor || game.isGameOver()) return;
     setThinking(true);
     const timer = window.setTimeout(() => {
       const next = new Chess(game.fen());
@@ -115,20 +104,19 @@ export default function App() {
       if (move) {
         next.move(move);
         setGame(new Chess(next.fen()));
-        setLastMove({ from: move.from, to: move.to });
         setSelected(null);
        
       }
       setThinking(false);
     }, 420);
     return () => window.clearTimeout(timer);
-  }, [game, level]);
+  }, [game, level, playerColor]);
 
   const resetGame = () => {
-    setGame(new Chess()); setSelected(null); setLastMove(null); setThinking(false);
+    setPlayerColor(Math.random() < 0.5 ? 'w' : 'b'); setGame(new Chess()); setSelected(null); setDraggingFrom(null); setThinking(false);
   };
   const makeMove = (from: Square, to: Square) => {
-    if (thinking || game.turn() !== 'w' || game.isGameOver()) return;
+    if (thinking || game.turn() !== playerColor || game.isGameOver()) return;
     const next = new Chess(game.fen());
     try {
       const move = next.move({ from, to, promotion: 'q' });
@@ -140,7 +128,7 @@ export default function App() {
       }
     } catch {
       const piece = game.get(to);
-      setSelected(piece?.color === 'w' ? to : null);
+      setSelected(piece?.color === playerColor ? to : null);
       setDraggingFrom(null);
     }
   };
@@ -149,7 +137,7 @@ export default function App() {
       suppressClick.current = false;
       return;
     }
-    if (thinking || game.turn() !== 'w' || game.isGameOver()) return;
+    if (thinking || game.turn() !== playerColor || game.isGameOver()) return;
     const piece = game.get(square);
     if (selected && targets.includes(square)) {
       makeMove(selected, square);
@@ -157,16 +145,10 @@ export default function App() {
     }
     setSelected(piece?.color === 'w' ? square : null);
   };
-  const undoMove = () => {
-    if (thinking || game.history().length < 2) return;
-    const next = new Chess(game.fen());
-    next.undo(); next.undo();
-    setGame(next); setSelected(null); setLastMove(null);
-  };
 
   return (
     <main className="chess-app">
-      <header className="topbar"><a className="brand" href="#" onClick={event => event.preventDefault()} aria-label="Munchess"><span className="brand-icon">♞</span><span className="brand-name">munchess</span></a><div className="topbar-right"><span className="rating-pill">1200 ELO</span><button className="round-button" onClick={() => setFlipped(value => !value)} title="Перевернуть доску" aria-label="Перевернуть доску"><RotateCcw size={18} /></button></div></header>
+      
 
 
       <section className="play-area">
@@ -174,17 +156,16 @@ export default function App() {
           <div className="board-wrap">
             
             <div className="chessboard" role="grid" aria-label="Шахматная доска">
-              {(flipped ? [...ranks].reverse() : ranks).map(rank => (flipped ? [...files].reverse() : files).map(file => {
+              {(playerColor === 'w' ? ranks : [...ranks].reverse()).map(rank => (playerColor === 'w' ? files : [...files].reverse()).map(file => {
                 const square = `${file}${rank}` as Square;
                 const piece = game.get(square);
                 const isLight = (files.indexOf(file) + rank) % 2 !== 0;
-                const isLast = lastMove?.from === square || lastMove?.to === square;
                 const isKingInCheck = piece?.type === 'k' && piece.color === game.turn() && game.isCheck();
-                return <button key={square} role="gridcell" aria-label={`${square}${piece ? `, ${piece.color === 'w' ? 'белая' : 'чёрная'} фигура` : ''}`} className={`square ${isLight ? 'light' : 'dark'} ${selected === square ? 'selected' : ''} ${draggingFrom === square ? 'dragging' : ''} ${isLast ? 'last-move' : ''} ${targets.includes(square) ? (piece ? 'capture-target' : 'legal-target') : ''} ${isKingInCheck ? 'king-check' : ''}`}
+                return <button key={square} role="gridcell" aria-label={`${square}${piece ? `, ${piece.color === 'w' ? 'белая' : 'чёрная'} фигура` : ''}`} className={`square ${isLight ? 'light' : 'dark'} ${selected === square ? 'selected' : ''} ${draggingFrom === square ? 'dragging' : ''} ${targets.includes(square) ? (piece ? 'capture-target' : 'legal-target') : ''} ${isKingInCheck ? 'king-check' : ''}`}
                   data-square={square}
-                  draggable={Boolean(piece?.color === 'w' && game.turn() === 'w' && !thinking)}
+                  draggable={Boolean(piece?.color === playerColor && game.turn() === playerColor && !thinking)}
                   onDragStart={event => {
-                    if (!piece || piece.color !== 'w' || game.turn() !== 'w' || thinking) { event.preventDefault(); return; }
+                    if (!piece || piece.color !== 'w' || game.turn() !== playerColor || thinking) { event.preventDefault(); return; }
                     event.dataTransfer.setData('text/plain', square);
                     event.dataTransfer.effectAllowed = 'move';
                     const pieceElement = event.currentTarget.querySelector('.piece-art, .piece-fallback') as HTMLElement | null;
@@ -203,7 +184,7 @@ export default function App() {
                   }}
                   onDragEnd={() => setDraggingFrom(null)}
                   onPointerDown={event => {
-                    if (event.pointerType === 'touch' && piece?.color === 'w' && game.turn() === 'w' && !thinking) {
+                    if (event.pointerType === 'touch' && piece?.color === playerColor && game.turn() === playerColor && !thinking) {
                       event.preventDefault();
                       setDraggingFrom(square);
                       setSelected(square);
@@ -230,7 +211,7 @@ export default function App() {
           
         </div>
 
-        <div className="board-controls"><div className="game-state"><span className={game.isCheck() ? 'state-dot warning' : 'state-dot'} /> <span>{status}</span></div><div className="board-actions"><button onClick={undoMove} disabled={thinking || game.history().length < 2} aria-label="Отменить ход" title="Отменить ход"><Undo2 size={19} /></button><button onClick={resetGame} aria-label="Новая партия" title="Новая партия"><RotateCcw size={19} /></button></div></div>
+        <div className="board-controls"><button className="new-game-button" onClick={resetGame}><RotateCcw size={18} /> Начать партию заново</button></div>
       </section>
     </main>
   );
