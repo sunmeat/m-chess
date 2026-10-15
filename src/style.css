@@ -60,3 +60,12 @@ body{background:radial-gradient(ellipse at 50% 0%,#292b30 0,transparent 55%),#1c
 /* Final board sizing and native piece-only drag preview */
 .play-area{max-width:537px}
 @media(max-width:520px){.play-area{width:76%;max-width:537px}}
+
+
+/* Minimal game controls */
+.topbar{display:none!important}
+.board-controls{justify-content:center;padding:18px 0 0}
+.new-game-button{display:flex;align-items:center;justify-content:center;gap:9px;min-height:46px;padding:0 20px;border:0;border-radius:14px;background:#58a85c;color:#fff;font-weight:900;box-shadow:0 4px 0 #326c3d;cursor:pointer;transition:transform .16s,background .16s}
+.new-game-button:hover{transform:translateY(-2px);background:#65b965}
+.new-game-button:active{transform:translateY(1px);box-shadow:0 2px 0 #326c3d}
+.square.last-move.light,.square.last-move.dark{background:inherit}
