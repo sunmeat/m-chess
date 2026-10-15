@@ -55,3 +55,8 @@ body{background:radial-gradient(ellipse at 50% 0%,#292b30 0,transparent 55%),#1c
   .board-wrap{padding:7px;border-radius:20px;box-shadow:0 4px 0 #17191c,0 9px 18px #0003}
   .chessboard{border-radius:14px}
 }
+
+
+/* Final board sizing and native piece-only drag preview */
+.play-area{max-width:565px}
+@media(max-width:520px){.play-area{width:80%;max-width:565px}}
