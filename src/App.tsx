@@ -3,7 +3,7 @@ import { Chess, type Square, type PieceSymbol, type Color } from 'chess.js';
 import { RotateCcw, Undo2 } from 'lucide-react';
 
 type Level = { rating: string; name: string; depth: number; randomness: number };
-const level: Level = { rating: '1000', name: 'Любитель', depth: 2, randomness: 0.42 };
+const level: Level = { rating: '1200', name: 'Любитель', depth: 3, randomness: 0.32 };
 const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const ranks = [8, 7, 6, 5, 4, 3, 2, 1];
 const values: Record<PieceSymbol, number> = { p: 100, n: 320, b: 335, r: 500, q: 900, k: 20000 };
@@ -166,7 +166,7 @@ export default function App() {
 
   return (
     <main className="chess-app">
-      <header className="topbar"><a className="brand" href="#" onClick={event => event.preventDefault()} aria-label="Munchess"><span className="brand-icon">♞</span><span className="brand-name">munchess</span></a><div className="topbar-right"><span className="rating-pill">1000 ELO</span><button className="round-button" onClick={() => setFlipped(value => !value)} title="Перевернуть доску" aria-label="Перевернуть доску"><RotateCcw size={18} /></button></div></header>
+      <header className="topbar"><a className="brand" href="#" onClick={event => event.preventDefault()} aria-label="Munchess"><span className="brand-icon">♞</span><span className="brand-name">munchess</span></a><div className="topbar-right"><span className="rating-pill">1200 ELO</span><button className="round-button" onClick={() => setFlipped(value => !value)} title="Перевернуть доску" aria-label="Перевернуть доску"><RotateCcw size={18} /></button></div></header>
 
 
       <section className="play-area">
