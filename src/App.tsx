@@ -8,22 +8,68 @@ const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const ranks = [8, 7, 6, 5, 4, 3, 2, 1];
 const values: Record<PieceSymbol, number> = { p: 100, n: 320, b: 335, r: 500, q: 900, k: 20000 };
 
-function PieceArt({ type, color }: { type: PieceSymbol; color: Color }) {
-  const white = color === 'w';
-  const fill = white ? 'url(#porcelain)' : 'url(#forest)';
-  const stroke = white ? '#a69d87' : '#17251a';
-  const shine = white ? '#ffffff' : '#8cb17a';
-  const common = { fill, stroke, strokeWidth: 1.6, strokeLinejoin: 'round' as const };
-  return <svg className={`piece-art ${white ? 'piece-white' : 'piece-black'}`} viewBox="0 0 64 76" aria-hidden="true" focusable="false">
-    <defs><linearGradient id="porcelain" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#fffef8"/><stop offset=".55" stopColor="#f3e9d0"/><stop offset="1" stopColor="#c8b997"/></linearGradient><linearGradient id="forest" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#6c8d5a"/><stop offset=".48" stopColor="#345638"/><stop offset="1" stopColor="#1b3423"/></linearGradient></defs>
-    <ellipse cx="32" cy="69" rx="20" ry="4" fill="#17251a" opacity=".17"/>
-    {type === 'p' && <g {...common}><path d="M17 62h30l-3-8H20z"/><path d="M21 54c2-5 4-8 5-13h12c1 5 3 8 5 13z"/><circle cx="32" cy="25" r="12"/><path d="M25 19c2-4 6-5 10-4" fill="none" stroke={shine} strokeWidth="3" strokeLinecap="round"/></g>}
-    {type === 'r' && <g {...common}><path d="M16 62h32l-3-8H19z"/><path d="M21 54V28h22v26z"/><path d="M17 28V14h8v7h6v-7h8v7h7v-7h4v14z"/><path d="M24 35v13m8-13v13m8-13v13" fill="none" stroke={shine} strokeWidth="2" strokeLinecap="round"/></g>}
-    {type === 'n' && <g {...common}><path d="M15 62h34l-4-8H19z"/><path d="M20 54c3-9 2-15-2-22l8-17 18 6 5 16-8 17z"/><path d="M26 20l8-6 11 8-9 4z"/><path d="M25 28l8 2-4 5-7-2z" fill={shine} stroke="none"/><circle cx="38" cy="25" r="2.5" fill={white ? '#5b714c' : '#f7d96d'} stroke="none"/><path d="M29 43l12 4" fill="none" stroke={shine} strokeWidth="2.5" strokeLinecap="round"/></g>}
-    {type === 'b' && <g {...common}><path d="M16 62h32l-3-8H19z"/><path d="M22 54c4-7 3-12-2-18L32 14l12 22c-5 6-6 11-2 18z"/><path d="M32 17l-4 10 7 8-5 8" fill="none" stroke={shine} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/><circle cx="32" cy="13" r="4"/></g>}
-    {type === 'q' && <g {...common}><path d="M14 62h36l-4-8H18z"/><path d="M20 54l4-20h16l4 20z"/><path d="M24 35l-8-12 10 4 6-16 6 16 10-4-8 12z"/><circle cx="16" cy="21" r="4"/><circle cx="26" cy="25" r="4"/><circle cx="32" cy="9" r="4"/><circle cx="38" cy="25" r="4"/><circle cx="48" cy="21" r="4"/><path d="M26 43h12" stroke={shine} strokeWidth="2.5" strokeLinecap="round"/></g>}
-    {type === 'k' && <g {...common}><path d="M14 62h36l-4-8H18z"/><path d="M21 54l4-20h14l4 20z"/><path d="M28 34V24h-8v-6h8V9h8v9h8v6h-8v10z"/><path d="M32 12v16" fill="none" stroke={shine} strokeWidth="2" strokeLinecap="round"/><path d="M26 42h12" stroke={shine} strokeWidth="2.5" strokeLinecap="round"/></g>}
-  </svg>;
+const pieceStyles = [
+  { id: 'cburnett', name: '01 · Классика Lichess', group: 'Классика' },
+  { id: 'merida', name: '02 · Merida', group: 'Классика' },
+  { id: 'alpha', name: '03 · Alpha', group: 'Классика' },
+  { id: 'staunty', name: '04 · Staunty', group: 'Классика' },
+  { id: 'maestro', name: '05 · Maestro', group: 'Классика' },
+  { id: 'caliente', name: '06 · Caliente', group: 'Классика' },
+  { id: 'gioco', name: '07 · Gioco', group: 'Классика' },
+  { id: 'california', name: '08 · California', group: 'Классика' },
+  { id: 'fantasy', name: '09 · Fantasy', group: 'Иллюстративные' },
+  { id: 'chessnut', name: '10 · Chessnut', group: 'Минимализм' },
+  { id: 'pixel', name: '11 · Pixel', group: 'Пиксельные' },
+  { id: 'horsey', name: '12 · Horsey', group: 'Иллюстративные' },
+  { id: 'anarcandy', name: '13 · Anarcandy', group: 'Иллюстративные' },
+  { id: 'cardinal', name: '14 · Cardinal', group: 'Классика' },
+  { id: 'dubrovny', name: '15 · Dubrovny', group: 'Классика' },
+  { id: 'fresca', name: '16 · Fresca', group: 'Иллюстративные' },
+  { id: 'icpieces', name: '17 · IC Pieces', group: 'Классика' },
+  { id: 'tatiana', name: '18 · Tatiana', group: 'Классика' },
+  { id: 'mono', name: '19 · Mono', group: 'Минимализм' },
+  { id: 'letter', name: '20 · Letter', group: 'Минимализм' },
+  { id: 'pirouetti', name: '21 · Pirouetti', group: 'Иллюстративные' },
+  { id: 'shapes', name: '22 · Shapes', group: 'Минимализм' },
+  { id: 'spatial', name: '23 · Spatial', group: 'Минимализм' },
+  { id: 'celtic', name: '24 · Celtic', group: 'Декоративные' },
+  { id: 'rhosgfx', name: '25 · RhosGFX', group: 'Классика' },
+  { id: 'firi', name: '26 · Firi', group: 'Мягкие' },
+  { id: 'kiwen-suwi', name: '27 · Kiwen-Suwi', group: 'Декоративные' },
+  { id: 'mpchess', name: '28 · MP Chess', group: 'Классика' },
+  { id: 'chess7', name: '29 · Chess7', group: 'Классика' },
+  { id: 'companion', name: '30 · Companion', group: 'Классика' },
+  { id: 'disguised', name: '31 · Disguised', group: 'Иллюстративные' },
+  { id: 'governor', name: '32 · Governor', group: 'Классика' },
+  { id: 'libra', name: '33 · Libra', group: 'Классика' },
+  { id: 'leipzig', name: '34 · Leipzig', group: 'Декоративные' },
+  { id: 'reillycraig', name: '35 · ReillyCraig', group: 'Классика' },
+  { id: 'riohacha', name: '36 · Riohacha', group: 'Классика' },
+  { id: 'cooke', name: '37 · Cooke', group: 'Классика' },
+  { id: 'papercut', name: '38 · Papercut', group: 'Декоративные' },
+  { id: 'totoy', name: '39 · Totoy', group: 'Декоративные' },
+  { id: 'shahi-ivory-brown', name: '40 · Shahi Ivory', group: 'Классика' },
+  { id: 'california', name: '41 · California Soft', group: 'Мягкие' },
+  { id: 'maestro', name: '42 · Maestro Bold', group: 'Классика' },
+  { id: 'fantasy', name: '43 · Fantasy Light', group: 'Иллюстративные' },
+  { id: 'chessnut', name: '44 · Chessnut Clean', group: 'Минимализм' },
+  { id: 'rhosgfx', name: '45 · RhosGFX Flat', group: 'Минимализм' },
+  { id: 'spatial', name: '46 · Spatial Soft', group: 'Минимализм' },
+  { id: 'celtic', name: '47 · Celtic Ornament', group: 'Декоративные' },
+  { id: 'kiwen-suwi', name: '48 · Kiwen-Suwi Round', group: 'Мягкие' },
+  { id: 'firi', name: '49 · Firi Rounded', group: 'Мягкие' },
+  { id: 'cburnett', name: '50 · Cburnett Classic+', group: 'Классика' },
+] as const;
+
+function PieceArt({ type, color, styleId }: { type: PieceSymbol; color: Color; styleId: string }) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [styleId, type, color]);
+  const symbols: Record<PieceSymbol, string> = color === 'w'
+    ? { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' }
+    : { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
+  const key = color + type.toUpperCase();
+  if (failed) return <span className={`piece-fallback ${color === 'w' ? 'piece-white' : 'piece-black'}`} aria-hidden="true">{symbols[type]}</span>;
+  return <img className={`piece-art ${color === 'w' ? 'piece-white' : 'piece-black'}`} src={`https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/${styleId}/${key}.svg`} alt="" draggable={false} onError={() => setFailed(true)} />;
 }
 
 function evaluate(chess: Chess) {
@@ -104,6 +150,8 @@ export default function App() {
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [thinking, setThinking] = useState(false);
   const [flipped, setFlipped] = useState(false);
+  const [styleId, setStyleId] = useState('cburnett');
+  const [showStyles, setShowStyles] = useState(true);
   const targets = useMemo(() => selected ? game.moves({ square: selected, verbose: true }).map(move => move.to as Square) : [], [game, selected]);
   const status = statusText(game, thinking);
 
@@ -167,7 +215,9 @@ export default function App() {
 
   return (
     <main className="chess-app">
-      <header className="topbar"><a className="brand" href="#" onClick={event => event.preventDefault()} aria-label="Munchess"><span className="brand-icon">♞</span><span className="brand-name">m<span>·</span>chess</span></a><div className="topbar-right"><span className="rating-pill">1000 ELO</span><button className="round-button" onClick={() => setFlipped(value => !value)} title="Перевернуть доску" aria-label="Перевернуть доску"><RotateCcw size={18} /></button></div></header>
+      <header className="topbar"><a className="brand" href="#" onClick={event => event.preventDefault()} aria-label="Munchess"><span className="brand-icon">♞</span><span className="brand-name">m<span>·</span>chess</span></a><div className="topbar-right"><button className="styles-toggle" onClick={() => setShowStyles(value => !value)}>{showStyles ? "Скрыть стили" : "50 стилей фигур"}</button><span className="rating-pill">1000 ELO</span><button className="round-button" onClick={() => setFlipped(value => !value)} title="Перевернуть доску" aria-label="Перевернуть доску"><RotateCcw size={18} /></button></div></header>
+
+      {showStyles && <section className="style-picker" aria-label="Выбор шахматных фигур"><div className="style-picker-heading"><div><span className="eyebrow">PIECE GALLERY</span><h1>Найди свой стиль</h1><p>50 вариантов оформления. Нажми на карточку, чтобы сразу примерить фигуры на доске.</p></div><span className="style-count">{pieceStyles.length} стилей</span></div><div className="style-grid">{pieceStyles.map((style, index) => <button key={index} className={`style-card ${styleId === style.id ? "active" : ""}`} onClick={() => setStyleId(style.id)} aria-pressed={styleId === style.id}><span className="style-preview"><img src={`https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/${style.id}/wK.svg`} alt="" loading="lazy" onError={event => { event.currentTarget.style.display = "none"; }} /><img src={`https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/${style.id}/bN.svg`} alt="" loading="lazy" onError={event => { event.currentTarget.style.display = "none"; }} /><img src={`https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/${style.id}/wQ.svg`} alt="" loading="lazy" onError={event => { event.currentTarget.style.display = "none"; }} /></span><span className="style-card-name">{style.name}</span><span className="style-card-group">{style.group}</span>{styleId === style.id && <span className="style-selected">Выбран</span>}</button>)}</div><p className="license-note">Иллюстрации загружаются из открытой коллекции Lichess. У отдельных наборов разные лицензии, поэтому перед коммерческим распространением проверь лицензию выбранного набора.</p></section>}
 
       <section className="play-area">
         <div className="board-side">
@@ -217,7 +267,7 @@ export default function App() {
                   }}
                   onClick={() => clickSquare(square)}>
                   {targets.includes(square) && !piece && <span className="target-dot" />}
-                  {piece && <PieceArt type={piece.type} color={piece.color} />}
+                  {piece && <PieceArt type={piece.type} color={piece.color} styleId={styleId} />}
                 </button>;
               }))}
             </div>
