@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Chess, type Square, type PieceSymbol, type Color } from 'chess.js';
-import { RotateCcw, Undo2, Sparkles, Bot, UserRound } from 'lucide-react';
+import { RotateCcw, Undo2, Bot, UserRound } from 'lucide-react';
 
 type Level = { rating: string; name: string; depth: number; randomness: number };
 const levels: Level[] = [
@@ -91,6 +91,8 @@ function statusText(game: Chess, thinking: boolean) {
 export default function App() {
   const [game, setGame] = useState(() => new Chess());
   const [selected, setSelected] = useState<Square | null>(null);
+  const [draggingFrom, setDraggingFrom] = useState<Square | null>(null);
+  const suppressClick = useRef(false);
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [thinking, setThinking] = useState(false);
   const [levelIndex, setLevelIndex] = useState(1);
@@ -129,15 +131,32 @@ export default function App() {
   const resetGame = () => {
     setGame(new Chess()); setSelected(null); setLastMove(null); setThinking(false);
   };
+  const makeMove = (from: Square, to: Square) => {
+    if (thinking || game.turn() !== 'w' || game.isGameOver()) return;
+    const next = new Chess(game.fen());
+    try {
+      const move = next.move({ from, to, promotion: 'q' });
+      if (move) {
+        setGame(next);
+        setLastMove({ from: move.from, to: move.to });
+        setSelected(null);
+        setDraggingFrom(null);
+      }
+    } catch {
+      const piece = game.get(to);
+      setSelected(piece?.color === 'w' ? to : null);
+      setDraggingFrom(null);
+    }
+  };
   const clickSquare = (square: Square) => {
+    if (suppressClick.current) {
+      suppressClick.current = false;
+      return;
+    }
     if (thinking || game.turn() !== 'w' || game.isGameOver()) return;
     const piece = game.get(square);
     if (selected && targets.includes(square)) {
-      const next = new Chess(game.fen());
-      const move = next.move({ from: selected, to: square, promotion: 'q' });
-      if (move) {
-        setGame(next); setLastMove({ from: move.from, to: move.to }); setSelected(null);
-      }
+      makeMove(selected, square);
       return;
     }
     setSelected(piece?.color === 'w' ? square : null);
@@ -153,15 +172,10 @@ export default function App() {
     <main className="chess-app">
       <header className="topbar">
         <a className="brand" href="#" onClick={event => event.preventDefault()} aria-label="M-Chess главная">
-          <span className="brand-icon">♞</span><span className="brand-name">m<span>·</span>chess<small>ТВОЙ СЛЕДУЮЩИЙ ХОД</small></span>
+          <span className="brand-icon">♞</span><span className="brand-name">m<span>·</span>chess</span>
         </a>
         <div className="topbar-right"><span className="offline-label"><i /> ИГРА БЕЗ СЕТИ</span><button className="round-button" onClick={() => setFlipped(value => !value)} title="Перевернуть доску" aria-label="Перевернуть доску"><RotateCcw size={17} /></button></div>
       </header>
-
-      <section className="intro">
-        <div className="intro-copy"><div className="kicker"><Sparkles size={14} /> НЕ СПЕШИ. ДУМАЙ.</div><h1>Тихая битва.<br /><em>Чистый расчёт.</em></h1><p>Никаких карточек и лишнего шума. Только ты, доска и компьютер.</p></div>
-        <div className="opponents"><div className="opponent"><span className="opponent-avatar human"><UserRound size={21} /></span><span><b>Ты</b><small>Белые фигуры</small></span></div><span className="vs">VS</span><div className="opponent"><span className="opponent-avatar machine"><Bot size={21} /></span><span><b>Компьютер</b><small>Чёрные фигуры</small></span></div></div>
-      </section>
 
       <section className="play-area">
         <div className="board-side">
@@ -175,7 +189,39 @@ export default function App() {
                 const isLight = (files.indexOf(file) + rank) % 2 !== 0;
                 const isLast = lastMove?.from === square || lastMove?.to === square;
                 const isKingInCheck = piece?.type === 'k' && piece.color === game.turn() && game.isCheck();
-                return <button key={square} role="gridcell" aria-label={`${square}${piece ? `, ${piece.color === 'w' ? 'белая' : 'чёрная'} фигура` : ''}`} className={`square ${isLight ? 'light' : 'dark'} ${selected === square ? 'selected' : ''} ${isLast ? 'last-move' : ''} ${targets.includes(square) ? (piece ? 'capture-target' : 'legal-target') : ''} ${isKingInCheck ? 'king-check' : ''}`} onClick={() => clickSquare(square)}>
+                return <button key={square} role="gridcell" aria-label={`${square}${piece ? `, ${piece.color === 'w' ? 'белая' : 'чёрная'} фигура` : ''}`} className={`square ${isLight ? 'light' : 'dark'} ${selected === square ? 'selected' : ''} ${draggingFrom === square ? 'dragging' : ''} ${isLast ? 'last-move' : ''} ${targets.includes(square) ? (piece ? 'capture-target' : 'legal-target') : ''} ${isKingInCheck ? 'king-check' : ''}`}
+                  draggable={Boolean(piece?.color === 'w' && game.turn() === 'w' && !thinking)}
+                  onDragStart={event => {
+                    if (!piece || piece.color !== 'w' || game.turn() !== 'w' || thinking) { event.preventDefault(); return; }
+                    event.dataTransfer.setData('text/plain', square);
+                    event.dataTransfer.effectAllowed = 'move';
+                    setDraggingFrom(square);
+                    setSelected(square);
+                  }}
+                  onDragOver={event => event.preventDefault()}
+                  onDrop={event => {
+                    event.preventDefault();
+                    const from = (event.dataTransfer.getData('text/plain') || draggingFrom) as Square | null;
+                    if (from) makeMove(from, square);
+                  }}
+                  onDragEnd={() => setDraggingFrom(null)}
+                  onPointerDown={event => {
+                    if (event.pointerType === 'touch' && piece?.color === 'w' && game.turn() === 'w' && !thinking) {
+                      event.preventDefault();
+                      setDraggingFrom(square);
+                      setSelected(square);
+                    }
+                  }}
+                  onPointerUp={event => {
+                    if (event.pointerType === 'touch' && draggingFrom) {
+                      event.preventDefault();
+                      suppressClick.current = true;
+                      window.setTimeout(() => { suppressClick.current = false; }, 350);
+                      makeMove(draggingFrom, square);
+                      setDraggingFrom(null);
+                    }
+                  }}
+                  onClick={() => clickSquare(square)}>
                   {targets.includes(square) && !piece && <span className="target-dot" />}
                   {piece && <span className={`piece ${piece.color === 'w' ? 'white-piece' : 'black-piece'}`}>{glyphs[piece.color][piece.type]}</span>}
                   {colIndex === 0 && <span className="rank-label">{rank}</span>}
@@ -200,7 +246,6 @@ export default function App() {
           </section>
         </aside>
       </section>
-      <footer className="footer"><span>♞ M·CHESS</span><span>ХОРОШИЙ ХОД НЕ НУЖДАЕТСЯ В ШУМЕ.</span><span>ЛОКАЛЬНАЯ ПАРТИЯ</span></footer>
     </main>
   );
 }
