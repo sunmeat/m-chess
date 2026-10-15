@@ -142,7 +142,7 @@ export default function App() {
       makeMove(selected, square);
       return;
     }
-    setSelected(piece?.color === 'w' ? square : null);
+    setSelected(piece?.color === playerColor ? square : null);
   };
 
   return (
@@ -202,6 +202,7 @@ export default function App() {
                   }}
                   onClick={() => clickSquare(square)}>
                   {piece && <PieceArt type={piece.type} color={piece.color} styleId={styleId} />}
+                  {targets.includes(square) && !piece && <span className="target-dot" aria-hidden="true" />}
                 </button>;
               }))}
             </div>
