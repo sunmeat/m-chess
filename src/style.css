@@ -71,11 +71,13 @@ body{background:radial-gradient(ellipse at 50% 0%,#292b30 0,transparent 55%),#1c
 .square.last-move.light,.square.last-move.dark{background:inherit}
 
 
-/* Duolingo-style move hints and near-black opponent pieces */
+/* Duolingo-style move hints, textured dark pieces, and knight cursor */
 .square.selected{background:inherit!important;box-shadow:none!important}
 .target-dot{width:25%;height:25%;background:#a8d69a9c;box-shadow:0 0 0 1px #172b1b20;pointer-events:none}
 .square.capture-target{background:#b6dc9b!important;box-shadow:inset 0 0 0 4px #b6dc9b!important}
 .square.capture-target:after{content:none!important;display:none!important}
-.piece-art.piece-black{filter:brightness(.12) grayscale(1) contrast(1.55) drop-shadow(0 2px 0 #0009) drop-shadow(0 4px 2px #0006)!important}
-.square.dragging .piece-art.piece-black{filter:brightness(.12) grayscale(1) contrast(1.55) drop-shadow(0 8px 5px #000b)!important}
-.piece-fallback.piece-black{color:#050506!important;-webkit-text-stroke:1px #000!important;text-shadow:0 1px 0 #18191b!important}
+.piece-art.piece-black{filter:brightness(.38) grayscale(.65) contrast(1.25) drop-shadow(0 2px 0 #0007) drop-shadow(0 4px 2px #0004)!important}
+.square.dragging .piece-art.piece-black{filter:brightness(.38) grayscale(.65) contrast(1.25) drop-shadow(0 8px 5px #0008)!important}
+.piece-fallback.piece-black{color:#17191b!important;-webkit-text-stroke:.6px #08090a!important;text-shadow:0 1px 0 #35383a!important}
+.chessboard,.square{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M5 2 L5 23 L10 18 L14 28 L19 26 L15 16 L23 16 Z' fill='%23c7cdd2' stroke='%2321272b' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M7 5 L7 19 L10 15 L15 25 L16.5 24 L12.5 14 L19 14 Z' fill='%23f3f5f6'/%3E%3C/svg%3E") 5 3, grab}
+.square:active{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M7 3 L12 3 L12 13 L16 9 L19 11 L24 17 L19 26 L10 27 L5 20 Z' fill='%23949da5' stroke='%2321272b' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M10 5 L10 15 L16 12 L21 18 L17 24 L11 24 L8 19 Z' fill='%23dce1e5'/%3E%3C/svg%3E") 9 9, grabbing}
