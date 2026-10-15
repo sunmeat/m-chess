@@ -171,7 +171,6 @@ export default function App() {
 
       <section className="play-area">
         <div className="board-side">
-          <div className="game-heading"><span className="move-counter">ПАРТИЯ ПРОТИВ КОМПЬЮТЕРА</span></div>
           <div className="board-wrap">
             
             <div className="chessboard" role="grid" aria-label="Шахматная доска">
