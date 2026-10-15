@@ -10,26 +10,6 @@ const values: Record<PieceSymbol, number> = { p: 100, n: 320, b: 335, r: 500, q:
 
 const pieceStyles = [
   { id: 's01', source: 'staunty', name: 'Staunty', group: 'CC BY-NC-SA 4.0', filter: 'none' },
-  { id: 's02', source: 'alpha', name: 'Alpha', group: 'проверить лицензию', filter: 'none' },
-  { id: 's03', source: 'california', name: 'California', group: 'CC BY-NC-SA 4.0', filter: 'none' },
-  { id: 's04', source: 'cardinal', name: 'Cardinal', group: 'CC BY-NC-SA 4.0', filter: 'none' },
-  { id: 's05', source: 'cburnett', name: 'Cburnett', group: 'проверить лицензию', filter: 'none' },
-  { id: 's06', source: 'chessnut', name: 'Chessnut', group: 'Apache-2.0', filter: 'none' },
-  { id: 's07', source: 'dubrovny', name: 'Dubrovny', group: 'CC BY-NC-SA 4.0', filter: 'none' },
-  { id: 's08', source: 'fantasy', name: 'Fantasy', group: 'MIT', filter: 'none' },
-  { id: 's09', source: 'fresca', name: 'Fresca', group: 'CC BY-NC-SA 4.0', filter: 'none' },
-  { id: 's10', source: 'gioco', name: 'Gioco', group: 'CC BY-NC-SA 4.0', filter: 'none' },
-  { id: 's11', source: 'governor', name: 'Governor', group: 'проверить лицензию', filter: 'none' },
-  { id: 's12', source: 'horsey', name: 'Horsey', group: 'CC BY-NC-SA 4.0', filter: 'none' },
-  { id: 's13', source: 'icpieces', name: 'Icpieces', group: 'CC BY-NC-SA 4.0', filter: 'none' },
-  { id: 's14', source: 'kosal', name: 'Kosal', group: 'проверить лицензию', filter: 'none' },
-  { id: 's15', source: 'maestro', name: 'Maestro', group: 'CC BY-NC-SA 4.0', filter: 'none' },
-  { id: 's16', source: 'merida', name: 'Merida', group: 'проверить лицензию', filter: 'none' },
-  { id: 's17', source: 'mpchess', name: 'MPChess', group: 'проверить лицензию', filter: 'none' },
-  { id: 's18', source: 'pixel', name: 'Pixel', group: 'проверить лицензию', filter: 'none' },
-  { id: 's19', source: 'rhosgfx', name: 'RhosGFX', group: 'CC0 1.0', filter: 'none' },
-  { id: 's20', source: 'spatial', name: 'Spatial', group: 'MIT', filter: 'none' },
-  { id: 's21', source: 'tatiana', name: 'Tatiana', group: 'CC BY-NC-SA 4.0', filter: 'none' }
 ] as const;
 
 function PieceArt({ type, color, styleId }: { type: PieceSymbol; color: Color; styleId: string }) {
@@ -122,8 +102,7 @@ export default function App() {
   const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
   const [thinking, setThinking] = useState(false);
   const [flipped, setFlipped] = useState(false);
-  const [styleId, setStyleId] = useState('s01');
-  const [showStyles, setShowStyles] = useState(true);
+  const styleId = 's01';
   const targets = useMemo(() => selected ? game.moves({ square: selected, verbose: true }).map(move => move.to as Square) : [], [game, selected]);
   const status = statusText(game, thinking);
 
@@ -187,9 +166,8 @@ export default function App() {
 
   return (
     <main className="chess-app">
-      <header className="topbar"><a className="brand" href="#" onClick={event => event.preventDefault()} aria-label="Munchess"><span className="brand-icon">♞</span><span className="brand-name">m<span>·</span>chess</span></a><div className="topbar-right"><button className="styles-toggle" onClick={() => setShowStyles(value => !value)}>{showStyles ? "Скрыть стили" : "21 набор фигур"}</button><span className="rating-pill">1000 ELO</span><button className="round-button" onClick={() => setFlipped(value => !value)} title="Перевернуть доску" aria-label="Перевернуть доску"><RotateCcw size={18} /></button></div></header>
+      <header className="topbar"><a className="brand" href="#" onClick={event => event.preventDefault()} aria-label="Munchess"><span className="brand-icon">♞</span><span className="brand-name">m<span>·</span>chess</span></a><div className="topbar-right"><span className="rating-pill">1000 ELO</span><button className="round-button" onClick={() => setFlipped(value => !value)} title="Перевернуть доску" aria-label="Перевернуть доску"><RotateCcw size={18} /></button></div></header>
 
-      {showStyles && <section className="style-picker" aria-label="Выбор шахматных фигур"><div className="style-picker-heading"><div><span className="eyebrow">PIECE GALLERY</span><h1>Найди свой стиль</h1><p>21 отдельный набор с разным рисунком фигур. Нажми на карточку, чтобы примерить его на доске.</p></div><span className="style-count">{pieceStyles.length} вариантов</span></div><div className="style-grid">{pieceStyles.map((style, index) => <button key={index} className={`style-card ${styleId === style.id ? "active" : ""}`} onClick={() => setStyleId(style.id)} aria-pressed={styleId === style.id}><span className="style-preview">{(['wK', 'bN', 'wQ'] as const).map(piece => <img key={piece} src={`https://raw.githubusercontent.com/lichess-org/lila/master/public/piece/${style.source}/${piece}.svg`} alt="" loading="lazy" style={{ filter: style.filter }} onError={event => { event.currentTarget.style.display = "none"; }} />)}</span><span className="style-card-name">{style.name}</span><span className="style-card-group">{style.group}</span>{styleId === style.id && <span className="style-selected">Выбран</span>}</button>)}</div><p className="license-note">Это разные оригинальные наборы, а не перекрашенные копии. Лицензии различаются: Staunty и ряд других наборов имеют ограничения на коммерческое использование. Перед публикацией или коммерческим использованием проверь условия каждого набора в PIECE-ART-CREDITS.md.</p></section>}
 
       <section className="play-area">
         <div className="board-side">
